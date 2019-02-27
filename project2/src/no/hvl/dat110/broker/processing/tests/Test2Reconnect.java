@@ -1,6 +1,6 @@
 package no.hvl.dat110.broker.processing.tests;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import no.hvl.dat110.broker.Broker;
 import no.hvl.dat110.broker.Dispatcher;

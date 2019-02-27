@@ -5,23 +5,11 @@ package no.hvl.dat110.messages;
 
 public class CreateTopicMsg extends Message {
 
-    private String user;
     private String topic;
-    private String message;
 
     public CreateTopicMsg(String user, String topic) {
-        this.user = user;
+        super(MessageType.CREATETOPIC, user);
         this.topic = topic;
-        message="";
-    }
-
-    @Override
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
     }
 
     public String getTopic() {
@@ -32,11 +20,11 @@ public class CreateTopicMsg extends Message {
         this.topic = topic;
     }
 
-    public String getMessage() {
-        return message;
-    }
 
-    public void setMessage(String message) {
-        this.message = message;
+    @Override
+    public String toString() {
+        return getType() +
+                "topic='" + topic + '\'' + " user: " + getUser() +
+                '}';
     }
 }
