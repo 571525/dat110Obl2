@@ -33,8 +33,8 @@ public class PublishMsg extends Message {
 
     @Override
     public String toString() {
-        return getType() + " user: " + getUser() +
-                "topic='" + topic + '\'' +
+        return "MessageType: " + getType() + ", user: " + getUser() + ", " +
+                " topic='" + topic + '\'' +
                 ", message='" + message + '\'' +
                 '}';
     }

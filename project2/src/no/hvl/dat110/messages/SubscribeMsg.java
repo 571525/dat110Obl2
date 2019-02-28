@@ -4,12 +4,12 @@ public class SubscribeMsg extends Message {
 
 
     // TODO: 
-	// Implement objectvariables, constructor, get/set-methods, and toString method
+    // Implement objectvariables, constructor, get/set-methods, and toString method
 
     private String topic;
 
     public SubscribeMsg(String user, String topic) {
-        super(MessageType.SUBSCRIBE,user);
+        super(MessageType.SUBSCRIBE, user);
         this.topic = topic;
     }
 
@@ -23,7 +23,7 @@ public class SubscribeMsg extends Message {
 
     @Override
     public String toString() {
-        return  getUser() + " " + getType() + ": " +
+        return "MessageType: " + getType() + ", user: " + getUser() + ", " +
                 "topic='" + topic + '\'' +
                 '}';
     }

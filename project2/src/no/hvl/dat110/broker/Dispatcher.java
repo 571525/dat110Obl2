@@ -142,6 +142,5 @@ public class Dispatcher extends Stopable {
 
         // TODO: publish the message to clients subscribed to the topic
         storage.getSubscribers(msg.getTopic()).stream().forEach(a -> storage.getSession(a).send(msg));
-
     }
 }
