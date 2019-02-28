@@ -68,17 +68,13 @@ public class Storage {
     public void addSubscriber(String user, String topic) {
 
         // TODO: add the user as subscriber to the topic
-        if (subscriptions.contains(topic)) {
-            subscriptions.get(topic).add(user);
-        }
+        subscriptions.get(topic).add(user);
     }
 
     public void removeSubscriber(String user, String topic) {
 
         // TODO: remove the user as subscriber to the topic
-        if (subscriptions.contains(topic)) {
-            if (subscriptions.get(topic).contains(user))
-                subscriptions.get(topic).remove(user);
-        }
+        subscriptions.get(topic).remove(user);
+
     }
 }
