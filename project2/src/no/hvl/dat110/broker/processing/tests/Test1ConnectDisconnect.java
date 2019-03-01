@@ -19,7 +19,7 @@ public class Test1ConnectDisconnect extends Test0Base {
 		client.connect();
 		
 		client.disconnect();
-		
+
 		assertTrue(true);
 	}
 }

@@ -71,7 +71,9 @@ public class Dispatcher extends Stopable {
 
             case PUBLISH:
                 onPublish((PublishMsg) msg);
+                bufferMessage((PublishMsg) msg); //buffers message if needed
                 break;
+
 
             default:
                 Logger.log("broker dispatch - unhandled message type");
@@ -89,6 +91,17 @@ public class Dispatcher extends Stopable {
 
         storage.addClientSession(user, connection);
 
+        if (storage.getBufferedMessages(user) != null) {
+            // give time for clientsession to be registered in broker
+            try{
+                Thread.sleep(2000);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            storage.getBufferedMessages(user).forEach(a -> storage.getSession(user).send(a));
+            storage.stopBufferingMessages(user);
+        }
+
     }
 
     // called by dispatch upon receiving a disconnect message
@@ -99,8 +112,9 @@ public class Dispatcher extends Stopable {
         Logger.log("onDisconnect:" + msg.toString());
 
         storage.removeClientSession(user);
-
+        storage.startBufferingMessages(user);
     }
+
 
     public void onCreateTopic(CreateTopicMsg msg) {
 
@@ -141,6 +155,23 @@ public class Dispatcher extends Stopable {
         Logger.log("onPublish:" + msg.toString());
 
         // TODO: publish the message to clients subscribed to the topic
-        storage.getSubscribers(msg.getTopic()).stream().forEach(a -> storage.getSession(a).send(msg));
+        storage.getSubscribers(msg.getTopic())
+                .stream()
+                .filter(a -> storage.getSession(a) != null)
+                .forEach(a -> storage.getSession(a).send(msg));
+    }
+
+    /**
+     * Adds the message to each user currently buffering messages
+     *
+     * @param msg
+     */
+    private void bufferMessage(PublishMsg msg) {
+        String topic = msg.getTopic();
+
+        storage.getSubscribers(topic)
+                .stream()
+                .filter(a -> storage.getBufferedMessages(a) != null)
+                .forEach(u -> storage.bufferMessage(u, msg));
     }
 }

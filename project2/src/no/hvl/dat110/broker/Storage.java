@@ -1,20 +1,21 @@
 package no.hvl.dat110.broker;
 
+import no.hvl.dat110.messages.PublishMsg;
 import no.hvl.dat110.messagetransport.Connection;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Storage {
 
     protected ConcurrentHashMap<String, Set<String>> subscriptions;
     protected ConcurrentHashMap<String, ClientSession> clients;
+    protected ConcurrentHashMap<String, List<PublishMsg>> bufferedMessages; // clients mapped to list of messages
 
     public Storage() {
         subscriptions = new ConcurrentHashMap<String, Set<String>>();
         clients = new ConcurrentHashMap<String, ClientSession>();
+        bufferedMessages = new ConcurrentHashMap<String, List<PublishMsg>>(); //maps users to buffered messages
     }
 
     public Collection<ClientSession> getSessions() {
@@ -76,5 +77,22 @@ public class Storage {
         // TODO: remove the user as subscriber to the topic
         subscriptions.get(topic).remove(user);
 
+    }
+
+    public void bufferMessage(String user, PublishMsg message) {
+        if(bufferedMessages.get(user) != null)
+            bufferedMessages.get(user).add(message);
+    }
+
+    public void startBufferingMessages(String user) {
+        bufferedMessages.put(user, new ArrayList<PublishMsg>());
+    }
+
+    public void stopBufferingMessages(String user) {
+        bufferedMessages.remove(user);
+    }
+
+    public List<PublishMsg> getBufferedMessages(String user) {
+        return bufferedMessages.get(user);
     }
 }
