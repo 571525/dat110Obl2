@@ -13,7 +13,7 @@ public class Test8BufferingMesg extends Test0Base {
     @Test
     public void test() {
 
-        broker.setMaxAccept(4); // Just to make sure broker keeps running. Broker impl not made for supporting reconnects.
+        broker.setMaxAccept(3);
 
         Client client1 = new Client("client1", BROKER_TESTHOST, BROKER_TESTPORT);
 
@@ -37,6 +37,7 @@ public class Test8BufferingMesg extends Test0Base {
 
         client2.subscribe(TOPIC);
 
+
         // allow broker to process subscriptions
         try {
             Thread.sleep(2000);
@@ -52,7 +53,7 @@ public class Test8BufferingMesg extends Test0Base {
         client2.disconnect();
 
         for (int i = 1; i <= 5; i++) {
-            client1.publish(TOPIC, "Message: " + i);
+            client1.publish(TOPIC, "Message send while disconnected: " + i);
 
             try {
                 Thread.sleep(1000);
@@ -71,13 +72,11 @@ public class Test8BufferingMesg extends Test0Base {
 
         for (int i = 1; i <= 5; i++) {
             PublishMsg msg = (PublishMsg) client2.receive();
-            System.out.println("Message received after reconnect: " + msg.getMessage());
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            System.out.println("Message received after reconnect: " + msg.getMessage() );
         }
+
+        client1.disconnect();
+        client2.disconnect();
 
         assertTrue(true);
 

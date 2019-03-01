@@ -5,41 +5,29 @@ import no.hvl.dat110.common.Stopable;
 import no.hvl.dat110.messages.*;
 import no.hvl.dat110.messagetransport.Connection;
 
-import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Dispatcher extends Stopable {
 
     private Storage storage;
+    private ConcurrentHashMap<ClientSession, Stopable> clientThreads;
 
     public Dispatcher(Storage storage) {
         super("Dispatcher");
         this.storage = storage;
-
+        this.clientThreads = new ConcurrentHashMap<ClientSession, Stopable>();
     }
 
     @Override
     public void doProcess() {
 
-        Collection<ClientSession> clients = storage.getSessions();
-
         Logger.lg(".");
-        for (ClientSession client : clients) {
+        storage.getSessions().forEach(a -> clientThreads.get(a).doProcess());
 
-            Message msg = null;
-
-            if (client.hasData()) {
-                msg = client.receive();
-            }
-
-            if (msg != null) {
-                dispatch(client, msg);
-            }
-        }
 
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -91,11 +79,28 @@ public class Dispatcher extends Stopable {
 
         storage.addClientSession(user, connection);
 
+        Stopable thread = new Stopable(user + " thread ") {
+            @Override
+            public void doProcess() {
+                ClientSession client = storage.getSession(user);
+
+                Message message = null;
+                if (client.hasData()) {
+                    message = client.receive();
+                }
+
+                if (message != null) {
+                    dispatch(client, message);
+                }
+            }
+        };
+        clientThreads.put(storage.getSession(user), thread);
+
         if (storage.getBufferedMessages(user) != null) {
             // give time for clientsession to be registered in broker
-            try{
+            try {
                 Thread.sleep(2000);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             storage.getBufferedMessages(user).forEach(a -> storage.getSession(user).send(a));
@@ -111,6 +116,7 @@ public class Dispatcher extends Stopable {
 
         Logger.log("onDisconnect:" + msg.toString());
 
+        clientThreads.remove(storage.getSession(user));
         storage.removeClientSession(user);
         storage.startBufferingMessages(user);
     }
