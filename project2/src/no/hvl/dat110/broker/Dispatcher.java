@@ -22,8 +22,15 @@ public class Dispatcher extends Stopable {
     public void doProcess() {
 
         Logger.lg(".");
-        storage.getSessions().forEach(a -> clientThreads.get(a).doProcess());
 
+        // this thread joins all the client threads
+        storage.getSessions().forEach(a -> {
+            try {
+                clientThreads.get(a).join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
 
         try {
             Thread.sleep(1000);
@@ -79,23 +86,33 @@ public class Dispatcher extends Stopable {
 
         storage.addClientSession(user, connection);
 
-        Stopable thread = new Stopable(user + " thread ") {
+        Stopable thread = new Stopable(user + " thread") {
             @Override
             public void doProcess() {
                 ClientSession client = storage.getSession(user);
 
-                Message message = null;
-                if (client.hasData()) {
-                    message = client.receive();
+                try {
+                    Message message = null;
+                    if (client.hasData()) {
+                        message = client.receive();
+                    }
+
+                    if (message != null) {
+                        dispatch(client, message);
+                    }
+                }catch (Exception e) {
                 }
 
-                if (message != null) {
-                    dispatch(client, message);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
                 }
             }
         };
+        thread.start();
         clientThreads.put(storage.getSession(user), thread);
 
+        // Send buffered messages after connect/reconnect
         if (storage.getBufferedMessages(user) != null) {
             // give time for clientsession to be registered in broker
             try {
@@ -116,7 +133,7 @@ public class Dispatcher extends Stopable {
 
         Logger.log("onDisconnect:" + msg.toString());
 
-        clientThreads.remove(storage.getSession(user));
+        clientThreads.remove(storage.getSession(user)).doStop();
         storage.removeClientSession(user);
         storage.startBufferingMessages(user);
     }
